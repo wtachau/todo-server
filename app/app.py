@@ -1,6 +1,7 @@
+""" Main App """
 import os
 
-from flask import Flask, request, jsonify
+from flask import Flask
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -18,11 +19,6 @@ from models import (
   User
 )
 
-@app.route("/todos", methods=["GET"])
-def test():
-
-  return "Success", 200
-
 @app.route("/users", methods=["GET"])
 def users():
-  return jsonify(User.query().all())
+  return User.query.limit(1).all()[0].to_json()

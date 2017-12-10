@@ -1,11 +1,13 @@
 from app import db
-
+from mixins import OutputMixin
 from datetime import datetime
 
-class User(db.Model):
+class User(OutputMixin, db.Model):
   id = db.Column(db.Integer, primary_key=True)
-  created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-  updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  # created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  # updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  def __repr__(self):
+    return '<User %r>' % self.id
 
 class Entry(db.Model):
   id = db.Column(db.Integer, primary_key=True)

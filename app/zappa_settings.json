@@ -1,10 +1,10 @@
 {
     "dev": {
-        "app_function": "main.app", 
-        "aws_region": "us-west-1", 
+        "app_function": "app.app", 
+        "aws_region": "us-east-1", 
         "profile_name": "willtachau", 
         "project_name": "todo-server", 
         "runtime": "python2.7", 
-        "s3_bucket": "tachau-todo-server-dev"
+        "s3_bucket": "tachau-dev-todo-server"
     }
 }

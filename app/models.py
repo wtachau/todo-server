@@ -5,8 +5,13 @@ class User(db.Model):
   __tablename__ = 'users'
 
   id = db.Column(db.Integer, primary_key=True)
+  icloud_token = db.Column(db.String(80), nullable=False)
   created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+  def __init__(self, token):
+    self.icloud_token = token
+
   def __repr__(self):
     return '<User %r>' % self.id
 
@@ -15,12 +20,13 @@ class Entry(db.Model):
 
   id = db.Column(db.Integer, primary_key=True)
   text = db.Column(db.String(80), nullable=False)
-  type = db.Column(db.String(80), nullable=False)
+  type_id = db.Column(db.Integer, db.ForeignKey('types.id'), nullable=False)
+  type = db.relationship('Type', backref='entries')
   active_after = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-  user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-  entry_generator_id = db.Column(db.Integer, db.ForeignKey('entry_generator.id'), nullable=True)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  entry_generator_id = db.Column(db.Integer, db.ForeignKey('entry_generators.id'), nullable=True)
   show_before_active = db.Column(db.Boolean, nullable=False, default=False)
 
   def __init__(self, user_id, text, type, active_after = None, entry_generator_id = None, show_before_active = False):
@@ -34,6 +40,20 @@ class Entry(db.Model):
   def __repr__(self):
     return '<Entry %r>' % self.text
 
+class Type(db.Model):
+  __tablename__ = 'types'
+
+  id = db.Column(db.Integer, primary_key=True)
+  text = db.Column(db.String(80), nullable=False)
+  order = db.Column(db.Integer, nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+  updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+  def __repr__(self):
+    return '<Type %r>' % self.text
+
+
 class EntryGenerator(db.Model):
   __tablename__ = 'entry_generators'
 
@@ -42,7 +62,7 @@ class EntryGenerator(db.Model):
   entry_type = db.Column(db.String(80), nullable=False)
   repeat_frequency = db.Column(db.String(80), nullable=False)
   start_at = db.Column(db.Integer, nullable=False, default=1)
-  user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
   created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -53,7 +73,7 @@ class Note(db.Model):
   __tablename__ = 'notes'
 
   id = db.Column(db.Integer, primary_key=True)
-  entry_id = db.Column(db.Integer, db.ForeignKey('entry.id'), nullable=False)
+  entry_id = db.Column(db.Integer, db.ForeignKey('entries.id'), nullable=False)
   text = db.Column(db.Text, nullable=False)
   created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -65,7 +85,7 @@ class Status(db.Model):
   __tablename__ = 'statuses'
 
   id = db.Column(db.Integer, primary_key=True)
-  user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
   status_text = db.Column(db.String(80), nullable=False)
   created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

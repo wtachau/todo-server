@@ -28,6 +28,8 @@ class Entry(db.Model):
   user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
   entry_generator_id = db.Column(db.Integer, db.ForeignKey('entry_generators.id'), nullable=True)
   show_before_active = db.Column(db.Boolean, nullable=False, default=False)
+  completed_on = db.Column(db.DateTime, nullable=True, default=None)
+  deleted_on = db.Column(db.DateTime, nullable=True, default=None)
 
   def __init__(self, user_id, text, type, active_after = None, entry_generator_id = None, show_before_active = False):
     self.user_id = user_id

@@ -8,6 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Resource, Api, reqparse
 
+from datetime import datetime
+
 app = Flask(__name__)
 
 app.secret_key = os.environ['SECRET_KEY']
@@ -42,10 +44,23 @@ entries_schema = EntrySchema(many=True)
 types_schema = TypeSchema(many=True)
 entry_schema = EntrySchema()
 
-class EntryResource(Resource):
+class EntryAPI(Resource):
+  def post(self, todo_id):
+    entry = Entry.query.get(todo_id)
+    entry.completed_on = datetime.utcnow()
+    db.session.commit()
+    result = entry_schema.dump(entry)
+    return jsonify({"data": result.data})
+
+class EntryListAPI(Resource):
+  def get(self):
+    user_entries = Entry.query.filter_by(user_id=session['user_id']).all()
+    result = entries_schema.dump(user_entries)
+    return jsonify({"data": result.data})
+  
   def post(self):
     args = entry_parser.parse_args()
-    entry_text = str(args['text'])
+    entry_text = args['text'].encode('utf-8')
     type = Type.query.filter_by(id = args.get('type')).one()
 
     new_entry = Entry(session['user_id'], entry_text, type)
@@ -53,15 +68,8 @@ class EntryResource(Resource):
     current_db_sessions = db.session.object_session(new_entry)
     current_db_sessions.add(new_entry)
     db.session.commit()
-    
+
     result = entry_schema.dump(new_entry)
-    return jsonify({"data": result.data})
-
-
-class EntryList(Resource):
-  def get(self):
-    user_entries = Entry.query.filter_by(user_id=session['user_id']).all()
-    result = entries_schema.dump(user_entries)
     return jsonify({"data": result.data})
 
 class TypeList(Resource):
@@ -85,6 +93,7 @@ def before_request():
 
   session['user_id'] = user.id
 
-api.add_resource(EntryResource, '/entries')
-api.add_resource(EntryList, '/entries')
-api.add_resource(TypeList, '/types', )
+api.add_resource(EntryListAPI, '/entries', endpoint = 'entries')
+api.add_resource(EntryAPI, '/entry/<string:todo_id>', endpoint='entry')
+
+api.add_resource(TypeList, '/types', endpoint = 'types')

@@ -1,5 +1,6 @@
-from app import db
 from datetime import datetime
+
+from app import db
 
 class User(db.Model):
   __tablename__ = 'users'
@@ -22,22 +23,28 @@ class Entry(db.Model):
   text = db.Column(db.String(80), nullable=False)
   type_id = db.Column(db.Integer, db.ForeignKey('types.id'), nullable=False)
   type = db.relationship('Type', backref='entries')
+
+  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+  user = db.relationship('User', backref='entries')
+
+  order = db.Column(db.Integer, nullable=False)
+
   active_after = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
   entry_generator_id = db.Column(db.Integer, db.ForeignKey('entry_generators.id'), nullable=True)
   show_before_active = db.Column(db.Boolean, nullable=False, default=False)
   completed_on = db.Column(db.DateTime, nullable=True, default=None)
   deleted_on = db.Column(db.DateTime, nullable=True, default=None)
 
-  def __init__(self, user_id, text, type, active_after = None, entry_generator_id = None, show_before_active = False):
+  def __init__(self, user_id, text, type, order, active_after=None, entry_generator_id=None, show_before_active=False):
     self.user_id = user_id
     self.text = text
     self.type = type
     self.active_after = active_after
     self.entry_generator_id = entry_generator_id
     self.show_before_active = show_before_active
+    self.order = order
 
   def __repr__(self):
     return '<Entry %r>' % self.text
@@ -70,7 +77,7 @@ class EntryGenerator(db.Model):
 
   def __repr__(self):
     return '<EntryGenerator %r>' % self.entry_text
-  
+ 
 class Note(db.Model):
   __tablename__ = 'notes'
 

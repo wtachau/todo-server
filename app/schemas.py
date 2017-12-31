@@ -13,7 +13,7 @@ class UserSchema(ma.ModelSchema):
 class EntrySchema(ma.ModelSchema):
   class Meta:
     model = Entry
-    ordered = True
+    # ordered = True
 
 class TypeSchema(ma.ModelSchema):
   entries = ma.Nested(EntrySchema, many=True)

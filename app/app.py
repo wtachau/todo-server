@@ -1,5 +1,6 @@
 """ Main App """
 import os
+from datetime import datetime
 
 from flask import Flask, jsonify, session
 from flask import request
@@ -8,7 +9,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_restful import Resource, Api, reqparse
 
-from datetime import datetime
 
 app = Flask(__name__)
 
@@ -23,6 +23,7 @@ api = Api(app)
 entry_parser = reqparse.RequestParser()
 entry_parser.add_argument('type')
 entry_parser.add_argument('text')
+entry_parser.add_argument('entries')
 
 from models import (
   Entry,
@@ -63,7 +64,12 @@ class EntryListAPI(Resource):
     entry_text = args['text'].encode('utf-8')
     type = Type.query.filter_by(id = args.get('type')).one()
 
-    new_entry = Entry(session['user_id'], entry_text, type)
+    # Find the highest order of existing entries, so the new one will be 1 higher
+    # todo: should use http://docs.sqlalchemy.org/en/latest/orm/collections.html#dynamic-relationship-loaders
+    existing_entries = Entry.query.filter_by(type=type, completed_on=None).all()
+    highest_order = max([entry.order for entry in existing_entries])
+
+    new_entry = Entry(session['user_id'], entry_text, type, highest_order + 1)
 
     current_db_sessions = db.session.object_session(new_entry)
     current_db_sessions.add(new_entry)
@@ -71,6 +77,16 @@ class EntryListAPI(Resource):
 
     result = entry_schema.dump(new_entry)
     return jsonify({"data": result.data})
+
+  def patch(self):
+    entries_json = request.json["entries"]
+    entries = entries_schema.load(entries_json).data
+
+    for index, entry in enumerate(entries):
+      entry.order = index + 1
+    db.session.commit()
+
+    return jsonify({ "data": entries_schema.dump(entries).data })
 
 class TypeList(Resource):
   def get(self):
